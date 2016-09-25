@@ -20,6 +20,17 @@
 
     </android.support.design.widget.AppBarLayout>
 
+    <ImageButton
+        android:id="@+id/menu_button"
+        android:layout_gravity="end|top"
+        android:background="@null"
+        android:src="@drawable/more"
+        android:padding="15dp"
+        android:elevation="5dp"
+        android:scaleType="centerCrop"
+        android:layout_width="?attr/actionBarSize"
+        android:layout_height="?attr/actionBarSize" />
+
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
