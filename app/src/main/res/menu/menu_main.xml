@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.activity.MainActivity">
+
+    <item
+        android:id="@+id/action_feedback"
+        android:orderInCategory="100"
+        android:icon="@drawable/feedback"
+        android:title="意见反馈"
+        app:showAsAction="never|withText" />
+
+    <item
+        android:id="@+id/action_refresh"
+        android:orderInCategory="100"
+        android:icon="@drawable/refresh"
+        android:title="刷新"
+        app:showAsAction="never|withText" />
+
+    <item
+        android:id="@+id/action_share"
+        android:orderInCategory="100"
+        android:icon="@drawable/share"
+        android:title="分享"
+        app:showAsAction="never|withText" />
+</menu>
