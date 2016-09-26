@@ -1,7 +1,28 @@
 package com.jiubai.jiubaijz;
 
+import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.os.Parcelable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -9,23 +30,44 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ImageSpan;
 import android.util.Log;
+import android.util.Xml;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.DecelerateInterpolator;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.PopupWindow;
+import android.widget.ProgressBar;
 
+import com.umeng.socialize.ShareAction;
+import com.umeng.socialize.UMShareAPI;
+import com.umeng.socialize.bean.SHARE_MEDIA;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+
+import static android.R.attr.bitmap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,11 +78,20 @@ public class MainActivity extends AppCompatActivity {
     WebView mWebView;
 
     @Bind(R.id.menu_button)
-    ImageButton imageButton;
+    ImageButton mImageButton;
+
+    @Bind(R.id.progress_bar)
+    ProgressBar mProgressBar;
 
     private PopupWindow popupWindow;
+    private String title = "玖佰记账";
     private int barColor;
     private int titleColor;
+    private boolean isAnimStart = false;
+    private int currentProgress;
+
+    //private static final String URL = "file:///android_asset/test.html";
+    public static final String URL = "http://888.jiubaiwang.cn";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,27 +109,96 @@ public class MainActivity extends AppCompatActivity {
         initWebView();
 
         initPopupWindow();
-
-        test();
     }
 
     private void initWebView() {
         mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.getSettings().setDefaultTextEncodingName("utf-8");
+
+        Log.i("agent", mWebView.getSettings().getUserAgentString());
+
+        mWebView.getSettings().setUserAgentString(
+                mWebView.getSettings().getUserAgentString() + "\\JiubaiwangLanren");
+
+        Log.i("agent", mWebView.getSettings().getUserAgentString());
 
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                mProgressBar.setVisibility(View.VISIBLE);
+                mProgressBar.setAlpha(1.0f);
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                Log.i("info", url);
-                view.loadUrl(url);
-                return true;
+                try {
+                    url = URLDecoder.decode(url, "utf-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
+                Log.i("url", url);
+
+                if (url.contains("app:::")) {
+                    String[] cmds = url.split(":::");
+
+                    if (cmds.length > 1) {
+                        for (int i = 1; i < cmds.length; i++) {
+                            execute(cmds[i]);
+                        }
+                    }
+
+                    return false;
+                } else {
+                    view.loadUrl(url);
+                    return true;
+                }
             }
         });
 
-        mWebView.loadUrl("http://888.jiubaiwang.cn");
+        mWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onReceivedTitle(WebView view, String title) {
+                MainActivity.this.title = title;
+
+                mToolbar.setTitle(title);
+
+                super.onReceivedTitle(view, title);
+            }
+
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                currentProgress = mProgressBar.getProgress();
+                if (newProgress >= 100 && !isAnimStart) {
+                    // 防止调用多次动画
+                    isAnimStart = true;
+                    mProgressBar.setProgress(newProgress);
+                    // 开启属性动画让进度条平滑消失
+                    startDismissAnimation(mProgressBar.getProgress());
+                } else {
+                    // 开启属性动画让进度条平滑递增
+                    startProgressAnimation(newProgress);
+                }
+
+                super.onProgressChanged(view, newProgress);
+            }
+        });
+
+        mWebView.loadUrl(URL);
     }
 
     private void initToolbar() {
         setSupportActionBar(mToolbar);
+
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mWebView.canGoBack()) {
+                    mWebView.goBack();
+                }
+            }
+        });
     }
 
     private void initPopupWindow() {
@@ -93,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
     public void OnClick(View view) {
         switch (view.getId()) {
             case R.id.menu_button:
-                popupWindow.showAsDropDown(imageButton);
+                popupWindow.showAsDropDown(mImageButton);
                 break;
         }
     }
@@ -109,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
 
                 case "titleColor":
                     titleColor = Color.argb(
-                            Integer.valueOf(parameters[4]),
+                            (int)(Double.valueOf(parameters[4]) * 255),
                             Integer.valueOf(parameters[1]),
                             Integer.valueOf(parameters[2]),
                             Integer.valueOf(parameters[3]));
@@ -118,13 +238,12 @@ public class MainActivity extends AppCompatActivity {
 
                 case "barColor":
                     barColor = Color.argb(
-                            Integer.valueOf(parameters[4]),
+                            (int)(Double.valueOf(parameters[4]) * 255),
                             Integer.valueOf(parameters[1]),
                             Integer.valueOf(parameters[2]),
                             Integer.valueOf(parameters[3]));
                     mToolbar.setBackgroundColor(barColor);
                     popupWindow.setBackgroundDrawable(new ColorDrawable(barColor));
-
                     break;
 
                 case "rightBtnUrl":
@@ -137,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
 
                 case "showLeftBtn":
                     if ("true".equals(parameters[1])) {
-                        //mToolbar.setNavigationIcon(R.drawable.back);
+                        mToolbar.setNavigationIcon(R.drawable.back);
                     } else {
                         mToolbar.setNavigationIcon(null);
                     }
@@ -147,12 +266,21 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case "share":
+                    share("玖佰记账", parameters[1], parameters[2]);
                     break;
 
                 case "feedback":
                     break;
+
+                case "refresh":
+                    refresh();
+                    break;
             }
         }
+    }
+
+    private void refresh() {
+        mWebView.loadUrl(URL);
     }
 
     private void setupMenuPopup(String[] parameters) {
@@ -164,7 +292,11 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 1; i <= length; i++) {
             titles.add(parameters[i * 3 - 1]);
-            imageIds.add(getResources().getIdentifier(parameters[i * 3], "drawable", getPackageName()));
+            if ("qrScan".equals(parameters[i * 3])) {
+                imageIds.add(getResources().getIdentifier("qr_scan", "drawable", getPackageName()));
+            } else {
+                imageIds.add(getResources().getIdentifier(parameters[i * 3], "drawable", getPackageName()));
+            }
             actions.add(parameters[i * 3 + 1]);
         }
 
@@ -176,8 +308,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 popupWindow.dismiss();
-                String cmd = "showLeftBtn::true";
-                execute(cmd);
+
+                mWebView.loadUrl("javascript:" + actions.get(i) + "()");
             }
         });
         listView.setAdapter(adapter);
@@ -185,20 +317,75 @@ public class MainActivity extends AppCompatActivity {
         popupWindow.setContentView(listView);
     }
 
-    private void test() {
-        String  cmd = "title::标题";
-        execute(cmd);
+    private void share(String title, String text, String url) {
+        if(Build.VERSION.SDK_INT>=23){
+            String[] mPermissionList = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.CALL_PHONE,Manifest.permission.READ_LOGS,Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.SET_DEBUG_APP,Manifest.permission.SYSTEM_ALERT_WINDOW,Manifest.permission.GET_ACCOUNTS,Manifest.permission.WRITE_APN_SETTINGS};
+            ActivityCompat.requestPermissions(this,mPermissionList,123);
+        }
 
-        cmd = "barColor::55::55::55::255";
-        execute(cmd);
+        new ShareAction(this)
+                .withTitle(title)
+                .withText(text)
+                .withTargetUrl(url)
+                .setDisplayList(SHARE_MEDIA.QQ, SHARE_MEDIA.QZONE, SHARE_MEDIA.WEIXIN, SHARE_MEDIA.WEIXIN_CIRCLE)
+                .open();
+    }
 
-        cmd = "titleColor::255::255::255::255";
-        execute(cmd);
+    /**
+     * progressBar递增动画
+     */
+    private void startProgressAnimation(int newProgress) {
+        ObjectAnimator animator = ObjectAnimator.ofInt(mProgressBar, "progress", currentProgress, newProgress);
+        animator.setDuration(300);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.start();
+    }
 
-        cmd = "showLeftBtn::false";
-        execute(cmd);
+    /**
+     * progressBar消失动画
+     */
+    private void startDismissAnimation(final int progress) {
+        ObjectAnimator anim = ObjectAnimator.ofFloat(mProgressBar, "alpha", 1.0f, 0.0f);
+        anim.setDuration(500);  // 动画时长
+        anim.setInterpolator(new DecelerateInterpolator());     // 减速
+        // 关键, 添加动画进度监听器
+        anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
-        cmd = "rightBtnStyle::4::分享::share::share::意见反馈::feedback::feedback::扫一扫::qr_scan::qrScan::刷新::refresh::refresh";
-        execute(cmd);
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                float fraction = valueAnimator.getAnimatedFraction();      // 0.0f ~ 1.0f
+                int offset = 100 - progress;
+                mProgressBar.setProgress((int) (progress + offset * fraction));
+            }
+        });
+
+        anim.addListener(new AnimatorListenerAdapter() {
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                // 动画结束
+                mProgressBar.setProgress(0);
+                mProgressBar.setVisibility(View.GONE);
+                isAnimStart = false;
+            }
+        });
+        anim.start();
+    }
+
+    /**
+     * 监听back键
+     * 在WebView中回退导航
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {  // 返回键的KEYCODE
+            if (mWebView.canGoBack()) {
+                mWebView.goBack();
+                return true;  // 拦截
+            } else {
+                return super.onKeyDown(keyCode, event);   //  放行
+            }
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }

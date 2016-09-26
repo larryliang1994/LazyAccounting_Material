@@ -16,33 +16,18 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="@string/app_name" />
+            app:title="@string/feedback" />
 
     </android.support.design.widget.AppBarLayout>
 
-    <ImageButton
-        android:id="@+id/menu_button"
-        android:layout_gravity="end|top"
-        android:background="@null"
-        android:src="@drawable/more"
-        android:padding="15dp"
-        android:elevation="5dp"
-        android:scaleType="centerCrop"
-        android:layout_width="?attr/actionBarSize"
-        android:layout_height="?attr/actionBarSize" />
-
-    <WebView
-        android:id="@+id/webView"
+    <EditText
+        android:id="@+id/editText"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:progressDrawable="@color/progress"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:padding="8dp"
+        android:hint="@string/feedback_content"
+        android:gravity="top"
+        android:background="@null"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
 </android.support.design.widget.CoordinatorLayout>

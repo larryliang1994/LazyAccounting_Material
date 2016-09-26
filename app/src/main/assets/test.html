@@ -1,0 +1,82 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>这是一个测试页面</title>
+</head>
+
+<script type="text/javascript" charset="utf-8">
+
+        var messagingIframe;
+        messagingIframe = document.createElement('iframe');
+        messagingIframe.style.display = 'none';
+        document.documentElement.appendChild(messagingIframe);
+
+        var commands = "/app:::";
+
+        // 添加一条指令，但暂时不执行
+        function addCommand(cmd, param) {
+            commands += cmd + "::" + param + ":::";
+        }
+
+        // 清空暂存的指令
+        function clearCommand() {
+            commands = "/app:::";
+        }
+
+        // 执行所有指令
+        function execute() {
+            messagingIframe.src = commands;
+
+            clearCommand();
+        }
+
+        // 立即执行一条指令
+        function sendCommand(cmd, param){
+            var url = "/app:::" + cmd + "::" + param;
+
+            messagingIframe.src = url;
+        }
+
+        // 分享
+        function share() {
+            sendCommand('share', '分享的内容::https://cn.bing.com');
+        }
+
+        // 反馈
+        function feedback() {
+            sendCommand('feedback', ' ');
+        }
+
+        // 扫一扫
+        function qrScan() {
+            sendCommand('qrScan', ' ');
+        }
+
+        // 刷新
+        function refresh() {
+            sendCommand('refresh', ' ');
+        }
+
+        addCommand('barColor','55::55::55::1.0');
+        addCommand('rightBtnUrl','http://taskmoment.image.alimmdn.com/button.png');
+        addCommand('title','懒人记账');
+        addCommand('titleColor','255::255::255::1.0');
+        addCommand('rightBtnStyle','4::分享::share::share::意见反馈::feedback::feedback::扫一扫::qrScan::qrScan::刷新::refresh::refresh');
+
+        execute();
+
+    </script>
+
+<body>
+<div id = "testDiv" style = "margin-top:200px">
+    测试内容显示区
+</div>
+<input type="button" value="标题栏颜色" onclick = "sendCommand('barColor','55::55::55::1.0');"/>
+<input type="button" value="右边按钮图片" onclick = "sendCommand('rightBtnUrl','http://taskmoment.image.alimmdn.com/button.png');"/>
+<input type="button" value="标题" onclick = "sendCommand('title','标题');"/>
+<input type="button" value="标题颜色" onclick = "sendCommand('titleColor','255::255::255::1.0');"/>
+<input type="button" value="右边按钮样式" onclick = "sendCommand('rightBtnStyle',
+            '4::分享::share::share::意见反馈::feedback::feedback::扫一扫::qrScan::qrScan::刷新::refresh::refresh');"/>
+<input type="button" value="去掉右边按钮" onclick = "sendCommand('rightBtnUrl','null');"/>
+</body>
+</html>

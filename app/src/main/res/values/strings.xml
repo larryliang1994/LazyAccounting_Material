@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">玖佰记账</string>
+    <string name="feedback">意见反馈</string>
+    <string name="feedback_content">点此输入反馈内容</string>
+    <string name="send">发送</string>
 </resources>
