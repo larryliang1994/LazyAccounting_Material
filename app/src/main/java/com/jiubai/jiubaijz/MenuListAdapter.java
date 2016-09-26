@@ -12,6 +12,8 @@ import java.util.ArrayList;
 
 /**
  * Created by Larry Howell on 2016/9/23.
+ *
+ * 右上角下拉菜单adapter
  */
 
 public class MenuListAdapter extends BaseAdapter {

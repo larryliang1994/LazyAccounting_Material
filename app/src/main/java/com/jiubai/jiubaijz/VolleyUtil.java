@@ -15,6 +15,8 @@ import java.util.Map;
 
 /**
  * Created by Larry Howell on 2016/9/26.
+ *
+ * 网络访问工具
  */
 
 public class VolleyUtil {
@@ -40,8 +42,7 @@ public class VolleyUtil {
                                          Response.ErrorListener errorCallback) {
         // 构建Post请求对象
         StringRequest stringRequest = new StringRequest(Request.Method.GET,
-                MainActivity.URL + url,
-                successCallback, errorCallback) {
+                url, successCallback, errorCallback) {
 
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {

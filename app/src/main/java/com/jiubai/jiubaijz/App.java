@@ -8,6 +8,8 @@ import com.umeng.socialize.PlatformConfig;
 
 /**
  * Created by Larry Howell on 2016/9/26.
+ *
+ * 自定义application
  */
 
 public class App extends Application {

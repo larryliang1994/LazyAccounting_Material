@@ -5,7 +5,7 @@
     tools:context=".ui.activity.MainActivity">
 
     <item
-        android:id="@+id/action_feedback"
+        android:id="@+id/action_done"
         android:orderInCategory="100"
         android:icon="@drawable/done"
         android:title="@string/send"

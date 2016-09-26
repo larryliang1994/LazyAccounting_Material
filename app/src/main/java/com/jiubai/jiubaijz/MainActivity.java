@@ -5,38 +5,20 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
-import android.os.Parcelable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.ImageSpan;
 import android.util.Log;
-import android.util.Xml;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.view.animation.DecelerateInterpolator;
+import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -47,27 +29,21 @@ import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 
 import com.umeng.socialize.ShareAction;
-import com.umeng.socialize.UMShareAPI;
 import com.umeng.socialize.bean.SHARE_MEDIA;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-import static android.R.attr.bitmap;
+/**
+ * Created by Larry Howell on 2016/9/23.
+ *
+ * 主acitivty
+ */
 
 public class MainActivity extends AppCompatActivity {
 
@@ -84,14 +60,11 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar mProgressBar;
 
     private PopupWindow popupWindow;
-    private String title = "玖佰记账";
-    private int barColor;
-    private int titleColor;
     private boolean isAnimStart = false;
     private int currentProgress;
 
-    //private static final String URL = "file:///android_asset/test.html";
-    public static final String URL = "http://888.jiubaiwang.cn";
+    public static final String URL = "file:///android_asset/test.html";
+    //public static final String URL = "http://888.jiubaiwang.cn";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,7 +100,16 @@ public class MainActivity extends AppCompatActivity {
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 mProgressBar.setVisibility(View.VISIBLE);
                 mProgressBar.setAlpha(1.0f);
+
                 super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                CookieManager cookieManager = CookieManager.getInstance();
+                String cookie = cookieManager.getCookie(url);
+
+                super.onPageFinished(view, url);
             }
 
             @Override
@@ -160,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
         mWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onReceivedTitle(WebView view, String title) {
-                MainActivity.this.title = title;
+                Config.title = title;
 
                 mToolbar.setTitle(title);
 
@@ -221,29 +203,29 @@ public class MainActivity extends AppCompatActivity {
     private void execute(String command) {
         final String[] parameters = command.split("::");
 
-        if (parameters.length > 1) {
+        if (parameters.length >= 1) {
             switch (parameters[0]) {
                 case "title":
                     mToolbar.setTitle(parameters[1]);
                     break;
 
                 case "titleColor":
-                    titleColor = Color.argb(
+                    Config.titleColor = Color.argb(
                             (int)(Double.valueOf(parameters[4]) * 255),
                             Integer.valueOf(parameters[1]),
                             Integer.valueOf(parameters[2]),
                             Integer.valueOf(parameters[3]));
-                    mToolbar.setTitleTextColor(titleColor);
+                    mToolbar.setTitleTextColor(Config.titleColor);
                     break;
 
                 case "barColor":
-                    barColor = Color.argb(
+                    Config.barColor = Color.argb(
                             (int)(Double.valueOf(parameters[4]) * 255),
                             Integer.valueOf(parameters[1]),
                             Integer.valueOf(parameters[2]),
                             Integer.valueOf(parameters[3]));
-                    mToolbar.setBackgroundColor(barColor);
-                    popupWindow.setBackgroundDrawable(new ColorDrawable(barColor));
+                    mToolbar.setBackgroundColor(Config.barColor);
+                    popupWindow.setBackgroundDrawable(new ColorDrawable(Config.barColor));
                     break;
 
                 case "rightBtnUrl":
@@ -270,6 +252,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case "feedback":
+                    feedback();
                     break;
 
                 case "refresh":
@@ -277,6 +260,12 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+    private void feedback() {
+        Log.i("info", "feedback");
+        Intent intent = new Intent(this, FeedbackActivity.class);
+        startActivity(intent);
     }
 
     private void refresh() {
@@ -318,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void share(String title, String text, String url) {
-        if(Build.VERSION.SDK_INT>=23){
+        if(Build.VERSION.SDK_INT >= 23){
             String[] mPermissionList = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.CALL_PHONE,Manifest.permission.READ_LOGS,Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.SET_DEBUG_APP,Manifest.permission.SYSTEM_ALERT_WINDOW,Manifest.permission.GET_ACCOUNTS,Manifest.permission.WRITE_APN_SETTINGS};
             ActivityCompat.requestPermissions(this,mPermissionList,123);
         }
