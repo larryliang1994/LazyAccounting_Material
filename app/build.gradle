@@ -5,17 +5,32 @@ android {
     buildToolsVersion "24.0.2"
     defaultConfig {
         applicationId "com.jiubai.jiubaijz"
-        minSdkVersion 21
+        minSdkVersion 19
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.debug
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+    signingConfigs {
+        debug {
+            storeFile file("sign.jks")
+            storePassword "leunghowell"
+            keyAlias "leunghowell"
+            keyPassword "leunghowell"
+        }
+    }
+    productFlavors {
     }
 }
 
@@ -38,6 +53,8 @@ dependencies {
     compile 'com.umeng.analytics:analytics:latest.integration'
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:design:24.2.1'
+    compile 'com.google.zxing:core:3.2.1'
+    compile 'com.umeng.analytics:analytics:latest.integration'
     compile files('libs/SocialSDK_QQZone_3.jar')
     compile files('libs/SocialSDK_umengqq.jar')
     compile files('libs/SocialSDK_umengwx.jar')
@@ -46,4 +63,5 @@ dependencies {
     compile files('libs/umeng_social_netv6.0.0.jar')
     compile files('libs/umeng_social_viewv6.0.0.jar')
     compile files('libs/Volley.jar')
+    compile project(':PushSDK')
 }

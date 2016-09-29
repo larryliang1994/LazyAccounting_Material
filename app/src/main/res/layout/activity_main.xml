@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.jiubai.jiubaijz.MainActivity">
+    tools:context="com.jiubai.jiubaijz.ui.MainActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -22,14 +23,13 @@
 
     <ImageButton
         android:id="@+id/menu_button"
+        android:layout_width="?attr/actionBarSize"
+        android:layout_height="?attr/actionBarSize"
         android:layout_gravity="end|top"
         android:background="@null"
-        android:src="@drawable/more"
         android:padding="15dp"
-        android:elevation="5dp"
         android:scaleType="centerCrop"
-        android:layout_width="?attr/actionBarSize"
-        android:layout_height="?attr/actionBarSize" />
+        android:src="@drawable/more" />
 
     <WebView
         android:id="@+id/webView"
@@ -39,10 +39,10 @@
 
     <ProgressBar
         android:id="@+id/progress_bar"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="3dp"
         android:progressDrawable="@color/progress"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 </android.support.design.widget.CoordinatorLayout>
