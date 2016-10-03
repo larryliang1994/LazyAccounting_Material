@@ -5,7 +5,7 @@ android {
     buildToolsVersion "24.0.2"
     defaultConfig {
         applicationId "com.jiubai.jiubaijz"
-        minSdkVersion 19
+        minSdkVersion 16
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
@@ -63,5 +63,6 @@ dependencies {
     compile files('libs/umeng_social_netv6.0.0.jar')
     compile files('libs/umeng_social_viewv6.0.0.jar')
     compile files('libs/Volley.jar')
+    compile files('libs/guideshowlib.jar')
     compile project(':PushSDK')
 }

@@ -2,12 +2,14 @@ package com.jiubai.jiubaijz;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.jiubai.jiubaijz.common.Config;
 import com.jiubai.jiubaijz.net.VolleyUtil;
+import com.jiubai.jiubaijz.ui.MainActivity;
 import com.umeng.message.IUmengRegisterCallback;
 import com.umeng.message.PushAgent;
 import com.umeng.message.UmengNotificationClickHandler;
@@ -35,6 +37,7 @@ public class App extends Application {
     public void initService() {
         VolleyUtil.initRequestQueue(getApplicationContext());
 
+        // 签名bfee4cf87a5c2819638512d0b1a0b592
         PlatformConfig.setWeixin("wx698954241d0efc96", "022a1078d40881525588b4bf39867072");
         PlatformConfig.setQQZone("1105686136", "h09hT7GutWorykbk");
 

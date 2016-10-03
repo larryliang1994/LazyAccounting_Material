@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -39,6 +40,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -52,6 +54,7 @@ import com.umeng.analytics.MobclickAgent;
 import com.umeng.message.PushAgent;
 import com.umeng.socialize.ShareAction;
 import com.umeng.socialize.bean.SHARE_MEDIA;
+import com.umeng.socialize.media.UMImage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,6 +92,9 @@ public class MainActivity extends AppCompatActivity {
     private long doubleClickTime = 0;
     private boolean isAnimStart = false;
     private int currentProgress;
+    private String currentUrl = "";
+    private boolean canGoBack = false;
+    private ListView mListView;
 
     //public static final String URL = "file:///android_asset/test.html";
     public static final String URL = "http://888.jiubaiwang.cn";
@@ -185,7 +191,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                mWebView.loadUrl(url);
+                if (!url.contains("app:::")) {
+                    mWebView.loadUrl(url);
+
+                    if (!currentUrl.equals(url)) {
+                        currentUrl = url;
+                    }
+                }
 
                 return true;
             }
@@ -228,8 +240,13 @@ public class MainActivity extends AppCompatActivity {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mWebView.canGoBack()) {
+                if (mWebView.canGoBack() && canGoBack) {
                     mWebView.goBack();
+
+                    while(mWebView.getUrl().equals(currentUrl) && mWebView.canGoBack()) {
+                        mWebView.goBack();
+                    }
+                    currentUrl = mWebView.getUrl();
                 }
             }
         });
@@ -239,7 +256,11 @@ public class MainActivity extends AppCompatActivity {
     public boolean onMenuOpened(int featureId, Menu menu) {
         if (popupWindow != null) {
             if (!popupWindow.isShowing()) {
-                popupWindow.showAsDropDown(mImageButton, UtilBox.dip2px(this, -12), 0, Gravity.END);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    popupWindow.showAsDropDown(mImageButton, UtilBox.dip2px(this, -12), 0, Gravity.END);
+                } else {
+                    popupWindow.showAtLocation(mListView, Gravity.CENTER, 0, 0);
+                }
             }
         }
         return false;
@@ -248,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
     private void initPopupWindow() {
         popupWindow = new PopupWindow(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            UtilBox.dip2px(this, 16);
+            popupWindow.setElevation(UtilBox.dip2px(this, 16));
         }
         popupWindow.setOutsideTouchable(true);
         popupWindow.setFocusable(true);
@@ -256,18 +277,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initMenuButton() {
-        mImageButton.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    v.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    v.setBackgroundColor(0);
-                }
-                return false;
-            }
-        });
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mImageButton.setElevation(UtilBox.dip2px(this, 8));
         }
@@ -277,7 +286,18 @@ public class MainActivity extends AppCompatActivity {
     public void OnClick(View view) {
         switch (view.getId()) {
             case R.id.menu_button:
-                popupWindow.showAsDropDown(mImageButton, UtilBox.dip2px(this, -12), 0, Gravity.END);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    popupWindow.showAsDropDown(mImageButton, UtilBox.dip2px(this, -12), 0, Gravity.END);
+                } else {
+                    popupWindow.showAtLocation(mListView, Gravity.CENTER, 0, 0);
+                }
+                mImageButton.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mImageButton.setBackgroundColor(0);
+                    }
+                }, 100);
                 break;
         }
     }
@@ -311,7 +331,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case "rightBtnUrl":
-
+                    setupMenuButton(parameters);
                     break;
 
                 case "rightBtnStyle":
@@ -320,9 +340,11 @@ public class MainActivity extends AppCompatActivity {
 
                 case "showLeftBtn":
                     if ("true".equals(parameters[1])) {
+                        canGoBack = true;
                         mToolbar.setNavigationIcon(R.drawable.back);
                     } else {
-                        mToolbar.setNavigationIcon(null);
+                        canGoBack = false;
+                        mToolbar.setNavigationIcon(R.drawable.home);
                     }
                     break;
 
@@ -461,6 +483,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void setupMenuButton(String[] parameters) {
+        if ("null".equals(parameters[1])) {
+            mImageButton.setVisibility(View.GONE);
+        } else {
+            mImageButton.setVisibility(View.VISIBLE);
+        }
+    }
+
     private void setupMenuPopup(String[] parameters) {
         final ArrayList<Integer> imageIds = new ArrayList<>();
         final ArrayList<String> titles = new ArrayList<>();
@@ -478,11 +508,11 @@ public class MainActivity extends AppCompatActivity {
             actions.add(parameters[i * 3 + 1]);
         }
 
-        ListView listView = new ListView(this);
+        mListView = new ListView(this);
 
-        listView.setBackgroundColor(0);
+        mListView.setBackgroundColor(0);
         MenuListAdapter adapter = new MenuListAdapter(this, imageIds, titles);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 popupWindow.dismiss();
@@ -490,9 +520,9 @@ public class MainActivity extends AppCompatActivity {
                 mWebView.loadUrl("javascript:" + actions.get(i) + "()");
             }
         });
-        listView.setAdapter(adapter);
+        mListView.setAdapter(adapter);
 
-        popupWindow.setContentView(listView);
+        popupWindow.setContentView(mListView);
     }
 
     /**
@@ -545,6 +575,11 @@ public class MainActivity extends AppCompatActivity {
         if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
             if (mWebView.canGoBack()) {
                 mWebView.goBack();
+
+                while(mWebView.getUrl().equals(currentUrl) && mWebView.canGoBack()) {
+                    mWebView.goBack();
+                }
+                currentUrl = mWebView.getUrl();
                 return true;
             } else if ((System.currentTimeMillis() - doubleClickTime) > 2000) {
                 UtilBox.showSnackbar(this, "再按一次退出程序");

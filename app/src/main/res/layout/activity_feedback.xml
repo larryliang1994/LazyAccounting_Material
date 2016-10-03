@@ -5,6 +5,7 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
     tools:context="com.jiubai.jiubaijz.ui.MainActivity">
 
     <android.support.design.widget.AppBarLayout
@@ -27,7 +28,7 @@
         android:padding="8dp"
         android:hint="@string/feedback_content"
         android:gravity="top"
-        android:background="@null"
+        android:background="#ffffff"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
 </android.support.design.widget.CoordinatorLayout>
