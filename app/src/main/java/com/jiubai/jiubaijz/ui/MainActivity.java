@@ -5,15 +5,20 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -25,6 +30,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -60,9 +66,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -237,6 +245,7 @@ public class MainActivity extends AppCompatActivity {
     private void initToolbar() {
         setSupportActionBar(mToolbar);
 
+        mToolbar.setNavigationIcon(R.drawable.home);
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -259,7 +268,11 @@ public class MainActivity extends AppCompatActivity {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     popupWindow.showAsDropDown(mImageButton, UtilBox.dip2px(this, -12), 0, Gravity.END);
                 } else {
-                    popupWindow.showAtLocation(mListView, Gravity.CENTER, 0, 0);
+                    int x = UtilBox.dip2px(this, 12);
+                    int titleHeight = UtilBox.dip2px(this, 56);
+                    Rect frame = new Rect();
+                    getWindow().getDecorView().getWindowVisibleDisplayFrame(frame);
+                    popupWindow.showAtLocation(mListView, Gravity.TOP + Gravity.END, x, frame.top + titleHeight);
                 }
             }
         }
@@ -274,6 +287,7 @@ public class MainActivity extends AppCompatActivity {
         popupWindow.setOutsideTouchable(true);
         popupWindow.setFocusable(true);
         popupWindow.setWidth(UtilBox.dip2px(this, 150));
+        popupWindow.setHeight(android.view.WindowManager.LayoutParams.WRAP_CONTENT);
     }
 
     private void initMenuButton() {
@@ -286,10 +300,18 @@ public class MainActivity extends AppCompatActivity {
     public void OnClick(View view) {
         switch (view.getId()) {
             case R.id.menu_button:
+                if (popupWindow == null) {
+                    return;
+                }
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     popupWindow.showAsDropDown(mImageButton, UtilBox.dip2px(this, -12), 0, Gravity.END);
                 } else {
-                    popupWindow.showAtLocation(mListView, Gravity.CENTER, 0, 0);
+                    int x = UtilBox.dip2px(this, 12);
+                    int titleHeight = UtilBox.dip2px(this, 56);
+                    Rect frame = new Rect();
+                    getWindow().getDecorView().getWindowVisibleDisplayFrame(frame);
+                    popupWindow.showAtLocation(mListView, Gravity.TOP + Gravity.END, x, frame.top + titleHeight);
                 }
                 mImageButton.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
                 new Handler().postDelayed(new Runnable() {
@@ -388,6 +410,51 @@ public class MainActivity extends AppCompatActivity {
 
             ActivityCompat.requestPermissions(this, mPermissionList, 123);
         }
+
+//        Intent it = new Intent(Intent.ACTION_SEND);
+//        it.setType("*/*");
+//        List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities(it, 0);
+//        if (!resInfo.isEmpty()) {
+//            List<Intent> targetedShareIntents = new ArrayList<>();
+//
+//            for (ResolveInfo info : resInfo) {
+//                Intent targeted = new Intent(Intent.ACTION_SEND);
+//
+//                ActivityInfo activityInfo = info.activityInfo;
+//
+//                Log.i("url", activityInfo.name);
+//
+//                if (activityInfo.packageName.toLowerCase().contains("com.tencent.mm")
+//                        && activityInfo.name.contains("com.tencent.mm.ui.tools.ShareImgUI")) {
+//                    targeted.setType("text/plain");
+//                    targeted.putExtra(Intent.EXTRA_TEXT, url);
+//                } else if (activityInfo.packageName.toLowerCase().contains("com.tencent.mobileqq")
+//                        && activityInfo.name.contains("com.tencent.mobileqq.activity.JumpActivity")) {
+//                    targeted.setType("text/plain");
+//                    targeted.putExtra(Intent.EXTRA_TEXT, url);
+//                } else if (activityInfo.packageName.toLowerCase().contains("com.tencent.mm")
+//                        && activityInfo.name.contains("com.tencent.mm.ui.tools.ShareToTimeLineUI")) {
+//                    targeted.setType("image/*");
+//                    targeted.putExtra(Intent.EXTRA_TEXT, url);
+//                } else {
+//                    continue;
+//                }
+//
+//                targeted.setComponent(new ComponentName(activityInfo.packageName, activityInfo.name));
+//                targetedShareIntents.add(targeted);
+//            }
+//            Intent chooserIntent = Intent.createChooser(targetedShareIntents.remove(0), "选择");
+//            if (chooserIntent == null) {
+//                return;
+//            }
+//
+//            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedShareIntents.toArray(new Parcelable[] {}));
+//            try {
+//                startActivity(chooserIntent);
+//            } catch (android.content.ActivityNotFoundException ex) {
+//                Toast.makeText(this, "Can't find share component to share", Toast.LENGTH_SHORT).show();
+//            }
+//        }
 
         new ShareAction(this)
                 .withTitle(title)
