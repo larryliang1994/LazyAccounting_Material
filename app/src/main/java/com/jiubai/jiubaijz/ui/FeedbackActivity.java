@@ -21,6 +21,9 @@ import com.jiubai.jiubaijz.net.VolleyUtil;
 import com.umeng.analytics.MobclickAgent;
 import com.umeng.message.PushAgent;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
@@ -74,8 +77,8 @@ public class FeedbackActivity extends AppCompatActivity {
                     progressDialog.setMessage("正在上传反馈内容");
                     progressDialog.show();
 
-                    String deviceInfo = Build.VERSION.SDK_INT + "##"
-                            + UtilBox.getPackageInfo(this).versionCode + "##"
+                    String deviceInfo = Build.VERSION.SDK_INT + "_"
+                            + UtilBox.getPackageInfo(this).versionCode + "_"
                             + android.os.Build.MODEL;
 
                     Log.i("info", deviceInfo);
@@ -87,6 +90,8 @@ public class FeedbackActivity extends AppCompatActivity {
                             new Response.Listener<String>() {
                                 @Override
                                 public void onResponse(String s) {
+                                    Log.i("info", s);
+
                                     new Handler().postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
@@ -94,20 +99,33 @@ public class FeedbackActivity extends AppCompatActivity {
                                         }
                                     }, 500);
 
-                                    UtilBox.showSnackbar(FeedbackActivity.this, "上传成功");
+                                    try {
+                                        JSONObject jsonObject = new JSONObject(s);
 
-                                    new Handler().postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            finish();
+                                        int code = jsonObject.getInt("code");
+                                        String info = jsonObject.getString("msg");
+                                        UtilBox.showSnackbar(FeedbackActivity.this, info);
+
+                                        if (code == 200) {
+                                            new Handler().postDelayed(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    finish();
+                                                }
+                                            }, 1500);
                                         }
-                                    }, 1500);
+                                    } catch (JSONException e) {
+                                        UtilBox.showSnackbar(FeedbackActivity.this, e.toString());
+                                        e.printStackTrace();
+                                    }
                                 }
                             },
                             new Response.ErrorListener() {
                                 @Override
                                 public void onErrorResponse(VolleyError volleyError) {
                                     progressDialog.dismiss();
+
+                                    UtilBox.showSnackbar(FeedbackActivity.this, "上传失败，请重试");
 
                                     Log.i("info", volleyError.getMessage());
                                 }

@@ -1,6 +1,7 @@
 package com.jiubai.jiubaijz.net;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -41,29 +42,23 @@ public class VolleyUtil {
     public static void request(final String url, final String[] key, final String[] value,
                         Response.Listener<String> successCallback,
                         Response.ErrorListener errorCallback) {
+        String realUrl = url + "?";
+
+        if (key != null) {
+            for (int i = 0; i < key.length; i++) {
+                realUrl += key[i] + "=" + value[i] + "&";
+            }
+        }
+
+        if (Config.cookie != null && Config.cookie.size() != 0) {
+            for (String k: Config.cookie.keySet()) {
+                realUrl += k + "=" + Config.cookie.get(k) + "&";
+            }
+        }
+
         // 构建Post请求对象
         StringRequest stringRequest = new StringRequest(Request.Method.GET,
-                url, successCallback, errorCallback) {
-
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                if (key != null) {
-                    Map<String, String> params = new HashMap<>();
-                    for (int i = 0; i < key.length; i++) {
-                        params.put(key[i], value[i]);
-                    }
-
-                    if (Config.cookie != null && Config.cookie.size() != 0) {
-                        for (String key: Config.cookie.keySet()) {
-                            params.put(key, Config.cookie.get(key));
-                        }
-                    }
-                    return params;
-                } else {
-                    return super.getParams();
-                }
-            }
-        };
+                realUrl, successCallback, errorCallback);
 
         stringRequest.setRetryPolicy(new DefaultRetryPolicy(10000, 1, 1.0f));
 

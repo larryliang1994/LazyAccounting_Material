@@ -15,6 +15,8 @@ import com.umeng.message.PushAgent;
 import com.umeng.message.UmengNotificationClickHandler;
 import com.umeng.message.entity.UMessage;
 import com.umeng.socialize.PlatformConfig;
+import com.umeng.socialize.UMShareAPI;
+import com.umeng.socialize.UmengTool;
 
 /**
  * Created by Larry Howell on 2016/9/26.
@@ -37,7 +39,8 @@ public class App extends Application {
     public void initService() {
         VolleyUtil.initRequestQueue(getApplicationContext());
 
-        // 签名bfee4cf87a5c2819638512d0b1a0b592
+        // 签名895049402aee7b7712ff06d84a94ed10
+        UMShareAPI.get(this);
         PlatformConfig.setWeixin("wx698954241d0efc96", "022a1078d40881525588b4bf39867072");
         PlatformConfig.setQQZone("1105686136", "h09hT7GutWorykbk");
 

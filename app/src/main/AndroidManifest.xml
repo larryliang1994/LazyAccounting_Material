@@ -88,6 +88,12 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity
+            android:name="com.umeng.socialize.editorpage.ShareActivity"
+            android:theme="@style/Theme.UMDefault"
+            android:excludeFromRecents="true"
+            />
+
+        <activity
             android:name="com.tencent.tauth.AuthActivity"
             android:launchMode="singleTask"
             android:noHistory="true">
@@ -109,15 +115,15 @@
 
         <meta-data
             android:name="UMENG_APPKEY"
-            android:value="57e39b34e0f55aafef000569"></meta-data>
+            android:value="57e39b34e0f55aafef000569"/>
 
         <meta-data
             android:name="UMENG_CHANNEL"
-            android:value="developer"></meta-data>
+            android:value="developer"/>
 
         <meta-data
             android:name="UMENG_MESSAGE_SECRET"
-            android:value="545760e5498dd761735085c2b5ddd718"></meta-data>
+            android:value="545760e5498dd761735085c2b5ddd718"/>
     </application>
 
 </manifest>

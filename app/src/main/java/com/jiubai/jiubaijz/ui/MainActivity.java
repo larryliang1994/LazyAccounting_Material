@@ -1,16 +1,11 @@
 package com.jiubai.jiubaijz.ui;
 
-import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -18,10 +13,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Parcelable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -30,15 +21,10 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
@@ -46,7 +32,6 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -60,17 +45,14 @@ import com.umeng.analytics.MobclickAgent;
 import com.umeng.message.PushAgent;
 import com.umeng.socialize.ShareAction;
 import com.umeng.socialize.bean.SHARE_MEDIA;
-import com.umeng.socialize.media.UMImage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -404,58 +386,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void share(String title, String text, String url) {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            String[] mPermissionList = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CALL_PHONE, Manifest.permission.READ_LOGS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.SET_DEBUG_APP, Manifest.permission.SYSTEM_ALERT_WINDOW, Manifest.permission.GET_ACCOUNTS, Manifest.permission.WRITE_APN_SETTINGS};
-
-            ActivityCompat.requestPermissions(this, mPermissionList, 123);
-        }
-
-//        Intent it = new Intent(Intent.ACTION_SEND);
-//        it.setType("*/*");
-//        List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities(it, 0);
-//        if (!resInfo.isEmpty()) {
-//            List<Intent> targetedShareIntents = new ArrayList<>();
-//
-//            for (ResolveInfo info : resInfo) {
-//                Intent targeted = new Intent(Intent.ACTION_SEND);
-//
-//                ActivityInfo activityInfo = info.activityInfo;
-//
-//                Log.i("url", activityInfo.name);
-//
-//                if (activityInfo.packageName.toLowerCase().contains("com.tencent.mm")
-//                        && activityInfo.name.contains("com.tencent.mm.ui.tools.ShareImgUI")) {
-//                    targeted.setType("text/plain");
-//                    targeted.putExtra(Intent.EXTRA_TEXT, url);
-//                } else if (activityInfo.packageName.toLowerCase().contains("com.tencent.mobileqq")
-//                        && activityInfo.name.contains("com.tencent.mobileqq.activity.JumpActivity")) {
-//                    targeted.setType("text/plain");
-//                    targeted.putExtra(Intent.EXTRA_TEXT, url);
-//                } else if (activityInfo.packageName.toLowerCase().contains("com.tencent.mm")
-//                        && activityInfo.name.contains("com.tencent.mm.ui.tools.ShareToTimeLineUI")) {
-//                    targeted.setType("image/*");
-//                    targeted.putExtra(Intent.EXTRA_TEXT, url);
-//                } else {
-//                    continue;
-//                }
-//
-//                targeted.setComponent(new ComponentName(activityInfo.packageName, activityInfo.name));
-//                targetedShareIntents.add(targeted);
-//            }
-//            Intent chooserIntent = Intent.createChooser(targetedShareIntents.remove(0), "选择");
-//            if (chooserIntent == null) {
-//                return;
-//            }
-//
-//            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedShareIntents.toArray(new Parcelable[] {}));
-//            try {
-//                startActivity(chooserIntent);
-//            } catch (android.content.ActivityNotFoundException ex) {
-//                Toast.makeText(this, "Can't find share component to share", Toast.LENGTH_SHORT).show();
-//            }
-//        }
-
         new ShareAction(this)
                 .withTitle(title)
                 .withText(text)
@@ -640,10 +570,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
-            if (mWebView.canGoBack()) {
+            if (mWebView.canGoBack() && mWebView.getUrl().equals(currentUrl) && canGoBack) {
                 mWebView.goBack();
 
-                while(mWebView.getUrl().equals(currentUrl) && mWebView.canGoBack()) {
+                while(mWebView.getUrl().equals(currentUrl) && mWebView.canGoBack() && canGoBack) {
                     mWebView.goBack();
                 }
                 currentUrl = mWebView.getUrl();
@@ -664,6 +594,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         MobclickAgent.onResume(this);
     }
+
     public void onPause() {
         super.onPause();
         MobclickAgent.onPause(this);
