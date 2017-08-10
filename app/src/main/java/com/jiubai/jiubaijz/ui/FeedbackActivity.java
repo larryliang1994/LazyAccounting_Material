@@ -19,7 +19,6 @@ import com.jiubai.jiubaijz.common.Config;
 import com.jiubai.jiubaijz.common.UtilBox;
 import com.jiubai.jiubaijz.net.VolleyUtil;
 import com.umeng.analytics.MobclickAgent;
-import com.umeng.message.PushAgent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,8 +48,6 @@ public class FeedbackActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         initView();
-
-        PushAgent.getInstance(this).onAppStart();
     }
 
     @Override

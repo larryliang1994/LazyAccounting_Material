@@ -81,12 +81,10 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(this, Manifest.permission.VIBRATE) != PackageManager.PERMISSION_GRANTED) {
-            String[] mPermissionList = new String[]{Manifest.permission.CAMERA, Manifest.permission.VIBRATE};
-            ActivityCompat.requestPermissions(this, mPermissionList, 123);
-        }
+        initView();
+    }
 
+    private void initView() {
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -237,7 +235,6 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     private void displayFrameworkBugMessageAndExit() {
         // camera error
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.app_name));
         builder.setMessage("相机打开出错，请稍后重试");
         builder.setPositiveButton("关闭", new DialogInterface.OnClickListener() {
             @Override
@@ -316,5 +313,4 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
                 break;
         }
     }
-
 }

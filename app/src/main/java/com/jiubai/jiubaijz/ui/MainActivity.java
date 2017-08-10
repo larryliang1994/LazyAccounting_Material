@@ -1,11 +1,13 @@
 package com.jiubai.jiubaijz.ui;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -13,6 +15,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -42,7 +45,6 @@ import com.jiubai.jiubaijz.common.UtilBox;
 import com.jiubai.jiubaijz.net.VolleyUtil;
 import com.jiubai.jiubaijz.zxing.activity.CaptureActivity;
 import com.umeng.analytics.MobclickAgent;
-import com.umeng.message.PushAgent;
 import com.umeng.socialize.ShareAction;
 import com.umeng.socialize.bean.SHARE_MEDIA;
 
@@ -87,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView mListView;
 
     //public static final String URL = "file:///android_asset/test.html";
-    public static final String URL = "http://888.jiubaiwang.cn";
+    public static final String URL = "https://888.jiubaiwang.cn";
     public static final int CODE_QR_SCAN = 1;
 
     @Override
@@ -99,8 +101,6 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         initView();
-
-        PushAgent.getInstance(this).onAppStart();
     }
 
     private void initView() {
@@ -123,6 +123,23 @@ public class MainActivity extends AppCompatActivity {
                 mWebView.getSettings().getUserAgentString() + "\\JiubaiwangLanren");
 
         mWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                if (errorCode == -2) {
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("您的网络有问题，请重试")
+                            .setCancelable(false)
+                            .setPositiveButton("刷新", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    refresh();
+                                }
+                            })
+                            .show();
+                }
+                super.onReceivedError(view, errorCode, description, failingUrl);
+            }
+
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 mProgressBar.setVisibility(View.VISIBLE);
@@ -268,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
         }
         popupWindow.setOutsideTouchable(true);
         popupWindow.setFocusable(true);
-        popupWindow.setWidth(UtilBox.dip2px(this, 150));
+        popupWindow.setWidth(UtilBox.dip2px(this, 160));
         popupWindow.setHeight(android.view.WindowManager.LayoutParams.WRAP_CONTENT);
     }
 
@@ -295,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
                     getWindow().getDecorView().getWindowVisibleDisplayFrame(frame);
                     popupWindow.showAtLocation(mListView, Gravity.TOP + Gravity.END, x, frame.top + titleHeight);
                 }
-                mImageButton.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+                mImageButton.setBackgroundColor(getResources().getColor(R.color.colorAccent));
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -372,8 +389,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void qrScan() {
-        Intent intent = new Intent(this, CaptureActivity.class);
-        startActivityForResult(intent, CODE_QR_SCAN);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.VIBRATE) != PackageManager.PERMISSION_GRANTED) {
+            String[] mPermissionList = new String[]{Manifest.permission.CAMERA, Manifest.permission.VIBRATE};
+            ActivityCompat.requestPermissions(this, mPermissionList, 123);
+        } else {
+            Intent intent = new Intent(this, CaptureActivity.class);
+            startActivityForResult(intent, CODE_QR_SCAN);
+        }
     }
 
     private void feedback() {
@@ -403,8 +426,6 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String s) {
                         try {
-                            //String response = "{\"version\":\"lanrenjizhangV2\", \"info\": \"您好，懒人记账推出了新版本，我们做了如下更新。1,这是第一个版本 2,这是第一个版本 3,这是第一个版本\", \"url\": \"http://20055.jiubai.cc/uploadfile/webeditor2/android/TaskMoment_Material.apk\"}";
-
                             JSONObject jsonObject = new JSONObject(s);
 
                             int newVersion = Integer.valueOf(
@@ -412,6 +433,8 @@ public class MainActivity extends AppCompatActivity {
 
                             if (newVersion > UtilBox.getPackageInfo(MainActivity.this).versionCode) {
                                 final String desc = jsonObject.getString("info");
+
+                                final String url = jsonObject.getString("url");
 
                                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                                 builder.setMessage(desc)
@@ -422,7 +445,7 @@ public class MainActivity extends AppCompatActivity {
                                         .setPositiveButton("更新", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                Uri uri = Uri.parse("http://20055.jiubai.cc/uploadfile/webeditor2/android/LazyAccounting_Material.apk");
+                                                Uri uri = Uri.parse(url);
                                                 startActivity(new Intent(Intent.ACTION_VIEW,uri));
                                             }
                                         });
@@ -454,7 +477,13 @@ public class MainActivity extends AppCompatActivity {
                     String result = data.getStringExtra("result");
                     if (result != null && !"".equals(result)) {
                         if (result.contains("http")) {
-                            mWebView.loadUrl(result);
+                            if (result.contains("jiubaiwang")) {
+                                mWebView.loadUrl(result);
+                            } else {
+                                Intent intent = new Intent(this, BrowserActivity.class);
+                                intent.putExtra("url", result);
+                                startActivity(intent);
+                            }
                         } else {
                             AlertDialog.Builder builder = new AlertDialog.Builder(this);
                             AlertDialog dialog = builder.setMessage(result)
@@ -588,6 +617,23 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == 123) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Intent intent = new Intent(this, CaptureActivity.class);
+                startActivityForResult(intent, CODE_QR_SCAN);
+            } else {
+                android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+                builder.setMessage("需要摄像头权限才能进行扫码");
+                builder.setPositiveButton("关闭", null);
+                builder.show();
+            }
+        }
     }
 
     public void onResume() {
